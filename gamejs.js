@@ -5,12 +5,20 @@ var ctx = canvas.getContext('2d');
 document.getElementById("gameCanvas").style.display = 'none';
 document.getElementById("timer").style.display = 'none';
 document.getElementById("playerscore").style.display = 'none';
-document.getElementById("lives").style.display = 'none';
 var timer; // timer variable
 var timeLeft = 60; // default time
 var lives; // lives variable
 var lives = 3; // number of lives remaining 
-
+var worms = []; // array for worm 
+var maxWorms = 20;
+var wormsPerSpawn = 5;
+var growthRate = 0.1; // increases the speed of the growth rate of the worm, shrinking and growing in size
+var radius;
+var minRadius = 2;
+var maxRadius = 25;
+var position;
+var caught;
+var gradient;
 
 $(document).ready(function() {
     let musicOn = true;
@@ -41,13 +49,19 @@ function playerHit() {
 
 
 function startGame() {
+    // show the level 1 message
+    document.getElementById("level1Text").style.display = 'block';
+    // hide the level text after 3 seconds and then start the level
+    setTimeout(function() {
+        document.getElementById("level1Text").style.display = 'none';
+    }, 3000); // 3 seconds
+
     timer = setInterval(updateTimer, 1000);
     document.getElementById("mainmenu").style.display = 'none';
     document.getElementById("gameCanvas").style.display = 'block';
     document.getElementById("timer").style.display = 'block';
-    document.getElementById("lives").style.display = 'block';
     document.getElementById("playerscore").style.display = 'block';
-    player();
+    level1();
     updateTimer();
 
 
@@ -61,14 +75,38 @@ function options() {
 
 document.getElementById('options').addEventListener("click", options);
 
+function timeUp() {
+    var gameOver = document.getElementById('gameOver');
+    gameMusic.pause();
 
-function player() {
+    gameOver.currentTime = 0;
+    //play sound
+    gameOver.play();
+
+    clearInterval(timer); // stop the timer
+    clearInterval(wormSpawnInterval);
+    character = null; // despawn the character when the time runs out
+
+    // show the time up message once the timer has ended. 
+    continueButton.style.display = 'block';
+    document.getElementById("gameCanvas").style.display = 'none';
+    updateScore();
+    setTimeout(function () {
+        location.reload();
+    }, 3000);
+
+}
+
+
+
+// spawns in the character, map, and worms
+function level1() {
     // Character Sprite sheet image from https://opengameart.org/content/base-character-spritesheet-16x16
     const characterSpriteSheet = new Image();
     characterSpriteSheet.src = "./assets/main_character.png";
     characterSpriteSheet.onload = load;
 
-    // Background image grass from https://opengameart.org/content/grass-1
+    // Background image Hand painted sand texture from https://opengameart.org/content/hand-painted-sand-texture-0
     const backgroundImage = new Image();
     backgroundImage.src = "./assets/grass.png";
     backgroundImage.onload = load;
@@ -104,6 +142,7 @@ function player() {
         }
     }
 
+
     // initialise canvas and game elements
     function init() {
         console.log("init");
@@ -127,11 +166,25 @@ function player() {
                 [ // walk right track 
                     [256, 64], [320, 64], [384, 64], [448, 64]
                 ],
+                [ // action track
+                    [256, 0], [384, 128], [448, 128]
+                ],
+
             ],
 
             1
         );
+
         character.init();
+        const minWorms = 50;
+        const maxWorms = 100;
+        const numWorms = Math.floor(Math.random() * (maxWorms - minWorms + 1)) + minWorms;
+
+        
+        gradient = ctx.createRadialGradient(0, 0, 1, 0, 0, maxRadius);
+        gradient.addColorStop(1, "orange");
+        gradient.addColorStop(1, "#f5e6ce");
+        worms = [];
 
         document.addEventListener("keydown", doKeyDown);
         document.addEventListener("keyup", doKeyUp);
@@ -152,11 +205,17 @@ function player() {
 
     function update() {
         character.update(tick);
+        for (let i = 0; i < worms.length; i++) {
+            worms[i].update(tick);
+        }
     }
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(backgroundImage, 0, 0, 800, 800);
+        for (let i = 0; i < worms.length; i++) {
+            worms[i].draw(ctx);
+        }
         character.draw(ctx);
     }
 
@@ -167,7 +226,12 @@ function player() {
 
     function doKeyUp(e) {
         e.preventDefault();
-        if (character != undefined) { character.doKeyInput(e.key, false); }
+        if (character != undefined) {
+            character.doKeyInput(e.key, false);
+            if (e.key === " ") {
+
+            }
+        }
     }
 
     // Create and return a new Character object.
@@ -210,7 +274,10 @@ function player() {
             action(action) {
                 console.log(`action: ${action}. Animation Frame ${this.animationFrame}`);
                 // ignore duplicate actions.
-                if (action === this.lastAction) return;
+                if (action == this.lastAction) {
+                    console.log(`repeated action: ${action}`);
+                    return;
+                }
 
                 // Handle each action type as cases.
                 switch (action) {
@@ -242,6 +309,17 @@ function player() {
                         this.direction[1] = 0;
                         this.animationFrame = 0;
                         break;
+                    case "catchWorm":
+                        console.log("catch worm");
+                        this.animationTrack = 4;
+                        this.animationFrame = 0;
+                        this.frameTime = 100;
+                    case "noCatchWorm":
+                        console.log("stop catching worm");
+                        // action finished, possibly set animation frame to default of moveDown.
+                        this.animationFrame = 0;
+                        this.frameTime = 128;
+                        break;
                     default:
                         this.direction = [0, 0];
                         break;
@@ -261,7 +339,7 @@ function player() {
 
                     // update frame to next frame on the track. 
                     // Modulo wraps the frames from last frame to first.
-                    if (this.direction[0] !== 0 || this.direction[1] !== 0) {
+                    if (this.direction[0] !== 0 || this.direction[1] !== 0 || this.lastAction === "catchWorm") {
                         this.animationFrame = (this.animationFrame + 1) % this.spriteFrames[this.animationTrack].length;
                     }
                 }
@@ -271,24 +349,24 @@ function player() {
                 this.position[0] += this.direction[0] * tick;
                 this.position[1] += this.direction[1] * tick;
 
-            // boundary checking
-            if (this.position[0] < 0) {
-                this.position[0] = 0;
-            }
+                // boundary checking
+                if (this.position[0] < 0) {
+                    this.position[0] = 0;
+                }
 
-            if (this.position[1] < 0) {
-                this.position[1] = 0;
-            }
+                if (this.position[1] < 0) {
+                    this.position[1] = 0;
+                }
 
-            if (this.position[0] + this.spriteCanvasSize[0] > canvas.width) {
-                this.position[0] = canvas.width - this.spriteCanvasSize[0];
-            }
+                if (this.position[0] + this.spriteCanvasSize[0] > canvas.width) {
+                    this.position[0] = canvas.width - this.spriteCanvasSize[0];
+                }
 
-            if (this.position[1] + this.spriteCanvasSize[1] > canvas.height) {
-                this.position[1] = canvas.height - this.spriteCanvasSize[1];
-            }
+                if (this.position[1] + this.spriteCanvasSize[1] > canvas.height) {
+                    this.position[1] = canvas.height - this.spriteCanvasSize[1];
+                }
 
-        },
+            },
             // Draw character elements using the passed context (canvas).
             // Param: context = canvas 2D context.
             draw(context) {
@@ -314,21 +392,47 @@ function player() {
             // Param: isKeyDown = boolean, true = key pressed, false = key released
             doKeyInput(e, isKeydown = true) {
                 switch (e) {
-                    case "w":
+                    case "w": // move up
                         if (isKeydown) this.action("moveUp");
                         else this.action("noMoveVertical");
                         break;
-                    case "a":
+                    case "a": // move right
                         if (isKeydown) this.action("moveLeft");
                         else this.action("noMoveHorizontal");
                         break;
-                    case "s":
+                    case "s": // move down
                         if (isKeydown) this.action("moveDown");
                         else this.action("noMoveVertical");
                         break;
-                    case "d":
+                    case "d": // move left
                         if (isKeydown) this.action("moveRight");
                         else this.action("noMoveHorizontal");
+                        break;
+                    case " ": // space bar to catch the worms
+                        if (isKeydown) {
+                            caught = false;
+                            this.action("catchWorm");
+                            for (let i = 0; i < worms.length; i++) {
+                                const worm = worms[i];
+                                const distance = Math.sqrt((this.position[0] - worm.x) ** 2 + (this.position[1] - worm.y) ** 2);
+                                if (distance <= 30) {
+                                    worms.splice(i, 1);
+                                    wormCaught();
+                                    caught = true;
+                                    break;
+
+                                }
+                            }
+                            if (!caught) {
+                                missWorm();
+                            }
+
+                        } else {
+
+                            this.action("noCatchWorm");
+                            break;
+
+                        }
                         break;
                     default:
                         if (!isKeydown) this.action("stop");
@@ -338,6 +442,155 @@ function player() {
             }
         };
     }
+}
+
+class GameObject {
+    constructor(context, x, y, vx, vy, width, height) {
+        this.context = context;
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.width = width;
+        this.height = height;
+
+        this.isColliding = false;
+
+        this.draw = this.draw.bind(this);
+        this.update = this.update.bind(this);
+        this.getRight = this.getRight.bind(this);
+        this.getBottom = this.getBottom.bind(this);
+        this.setVelocity = this.setVelocity.bind(this);
+        this.offsetVelocity = this.offsetVelocity.bind(this);
+    }
+    getRight() {
+        return (this.x + this.width);
+    }
+
+    getBottom() {
+        return (this.y + this.height);
+    }
+
+    draw(context) { };
+    update(secondsPassed) { };
+}
+
+// drawing the worms as semi circles
+class SemiCircle extends GameObject {
+    constructor(context, x, y, vx, vy, radius, growthRate) {
+        super(context, x, y, vx, vy);
+
+        this.radius = radius;
+        this.growthRate = growthRate;
+        // new variable to tell if worm size should be growing or shrinking.
+        this.isGrowing = true;
+        this.minRadius = 10;
+        this.maxRadius = 40;
+        this.draw = this.draw.bind(this);
+        this.update = this.update.bind(this);
+        this.setVelocity = this.setVelocity.bind(this);
+    }
+
+    draw(ctx) {
+        super.draw(ctx);        
+        console.log("worm.draw");
+        ctx.fillStyle = this.gradient; 
+        ctx.strokeStyle = 'lightsand';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, Math.PI, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    update(secondsPassed) {
+        super.update(secondsPassed);
+
+        // check if should be growing or not.
+        if (this.isGrowing) {
+            // if growing, increase radius by growthRate
+            this.radius += this.growthRate;
+            // when growing, check if max size has been achieved
+            if (this.radius >= this.maxRadius) {
+                // If max size, change lifecycle phase to shrinking mode
+                this.isGrowing = false;
+                //update gradient colours
+                this.gradient = ctx.createRadialGradient(0, 0, 1, 0, 0, this.maxRadius);
+                this.gradient.addColorStop(1, "#f5e6ce");
+                this.gradient.addColorStop(0, "beige");
+            }
+        }
+        // If shrinking after growing
+        else {
+            // decrease size by growth rate
+            this.radius -= this.growthRate;
+            // check if minimum size has been achieved
+            if (this.radius <= this.minRadius) {
+                this.radius = this.minRadius;
+                this.x - Math.random() * this.context.canvas.width;
+                this.y = Math.random() * this.context.canvas.height;
+                // if min size, change lifecycle phase to growing mode and respawn the worm at a random point on the canvas to start growing again
+                this.isGrowing = true;
+                this.gradient = ctx.createRadialGradient(0, 0, 1, 0, 0, this.maxRadius);
+                this.gradient.addColorStop(1, "beige");
+                this.gradient.addColorStop(0, "#f5e6ce");
+            }
+        }
+
+        const newX = this.x + this.vx * secondsPassed;
+        const newY = this.y + this.vy * secondsPassed;
+
+        if (newX - this.radius < 0 || newX + this.radius > this.context.canvas.width) {
+            this.vx *= -1;
+        }
+
+        if (newY - this.radius < 0 || newY + this.radius > this.context.canvas.height) {
+            this.vy *= -1;
+        }
+
+        this.x += this.vx * secondsPassed;
+        this.y += this.vy * secondsPassed;
+
+    }
+
+    isPointInside(x, y) {
+        const distance = Math.sqrt((x - this.x) ** 2 + (y - this.y) ** 2);
+        return distance <= this.radius;
+    }
+
+    setVelocity(vx, vy) {
+        this.vx = vx;
+        this.vy = vy;
+    }
+
+    offsetVelocity(vx, vy) {
+        this.vx += vx;
+        this.vy += vy;
+    }
+}
+
+// creating the worms  
+function createWorms() {
+    console.log("spawning worm")
+    let x = Math.random() * canvas.width;
+    let y = Math.random() * canvas.height;
+
+    // worm speed
+    let vx = (Math.random() - 0.5) * 0.2; 
+    let vy = (Math.random() - 0.5) * 0.2;
+
+    const initialColor= [244, 164, 96]; // Light sand colour
+    const finalColor = [245, 245, 220]; // Beige colour
+
+    let worm = new SemiCircle(ctx, x, y, vx, vy, minRadius, growthRate);
+
+
+    worm.gradient = ctx.createRadialGradient(0, 0, 1, 0, 0, this.maxRadius);
+                worm.gradient.addColorStop(1, "#f5e6ce");
+                worm.gradient.addColorStop(0, "orange");
+
+
+    worms.push(worm);
 }
 
 

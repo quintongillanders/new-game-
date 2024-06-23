@@ -85,18 +85,6 @@ body {
     font-size: large;
 }
 
-#lives {
-    position: fixed;
-    top:50%;
-    left: 50%;
-    margin-top: 150px;
-    margin-left: -190px;
-    z-index: 1;
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    font-weight: bold;
-    font-size: large;
-}
-
 #playerscore {
     position: fixed;
     top:50%;
@@ -108,3 +96,86 @@ body {
     font-weight: bold;
     font-size: large;
     }
+
+#wormgame {
+    position: absolute;
+    z-index: 1;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size: larger;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+#level1Text {
+    position: fixed;
+    top:50%;
+    left: 50%;
+    margin-top: -150px;
+    margin-left: -80px;
+    z-index: 1;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-weight: bold;
+    font-size: 24px;
+    }
+
+#level2Text {
+    position: fixed;
+    top:50%;
+    left: 50%;
+    margin-top: -150px;
+    margin-left: -80px;
+    z-index: 1;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-weight: bold;
+    font-size: 24px;
+    }
+
+#level3Text {
+    position: fixed;
+    top:50%;
+    left: 50%;
+    margin-top: -150px;
+    margin-left: -80px;
+    z-index: 1;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+#level4Text {
+    position: fixed;
+    top:50%;
+    left: 50%;
+    margin-top: -150px;
+    margin-left: -80px;
+    z-index: 1;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+#level5Text {
+    position: fixed;
+    top:50%;
+    left: 50%;
+    margin-top: -150px;
+    margin-left: -80px;
+    z-index: 1;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-weight: bold;
+    font-size: 24px;  
+}
+
+#continueButton {
+position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -220px;
+    margin-left: -50px;
+    z-index: 1;
+}
+
+
+#gameCanvas, #timer, #playerscore, #level1Text, #level2Text, #level3Text, #level4Text, #level5Text, #continueButton {
+    display: none;
+}
