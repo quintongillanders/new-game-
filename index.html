@@ -6,11 +6,11 @@
         <link rel="stylesheet" href="./gamestyle.css">
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-        <title>New Game</title>
+        <title>Adventure Game</title>
     </head>
     <body>
         <header>
-            <h1>Placeholder</h1>
+            <h1>Adventure Game!</h1>
         </header>
         <a href="https://quintongillanders.github.io/wormcatchinggame.github.io/" id="wormcatchinggame" target="_blank">
         <div id="wormgame">
@@ -19,7 +19,7 @@
     </a>
         <div id="instructions">
             <h2>How to play</h2>
-            <p>You have awakened in a strange place, and you must fight through 5 different areas to make it out alive! You have 60 seconds in each area to defeat as many enemies as you can! But be careful, you only have 3 lives, and the enemies become stronger with each area you make it to.</p>
+            <p>You have woken up in a strange place, and you must fight through 5 different areas to make it out alive! You have a certain amount of time in each area to defeat as many enemies as you can! But be careful, you only have 3 lives, and the enemies become faster with each area you make it to.</p>
             <ul>
                 <li>W: Move Up</li>
                 <li>S: Move Down</li>
@@ -37,12 +37,35 @@
             <li><button id="startGame" class="mybutton">Start Game</button></li>
             <li><button id="options" class="mybutton">Settings</button></li>
             </ul>
+        <div id = "optionsmenu">
+            <form id = "settingsForm">
+                <fieldset>
+                    <legend>Music</legend>
+                    <label>
+                        <input type="radio" name="music" value="on" checked> On
+                    </label>
+                    <label>
+                        <input type="radio" name="music" value="off"> Off
+                    </label>
+                </fieldset>
+                <fieldset>
+                    <legend>Sound Effects</legend>
+                    <label>
+                        <input type="radio" name="soundEffects" value="on" checked> On
+                    </label>
+                    <label>
+                        <input type="radio" name="soundEffects" value="off"> Off
+                    </label>
+                </fieldset>
+            </form>
+            <button id="saveSettings" class="mybutton">Save</button>
+        </div>
         </div>
         <div id="playerscore">
             <h4>Score: <span id="score">0</span></h4>
         </div>
         <div id="level1Text">
-            Level 1: *level name*
+            Level 1: Poison Worms
         </div>
         <div id="level2Text">
             Level 2: Killer Penguins
@@ -62,4 +85,9 @@
         <canvas id="gameCanvas" width="1000" height="1000"></canvas>
         <script src="gamejs.js"></script>
         </div>
+        <div id="level1Complete" style="display:none">Level complete!</div>
+        <audio id="poisonforest" src="poisonforest.mp3"></audio>
+        <audio id = "wormcaught" src="hit.mp3"></audio>
+        <audio id="levelpassed" src="levelpassed.mp3"></audio>
+        <audio id="damage" src="playerhit.mp3"></audio>
     </body>

@@ -175,6 +175,30 @@ position: absolute;
     z-index: 1;
 }
 
+#level1Complete {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -100px;
+    margin-left: -100px;
+    z-index: 1;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size: larger;
+    font-weight: bold;
+}
+
+#optionsmenu {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -100px;
+    margin-left: -100px;
+    z-index: 1;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size: larger;
+    font-weight: bold;
+}
 
 #gameCanvas, #timer, #playerscore, #level1Text, #level2Text, #level3Text, #level4Text, #level5Text, #continueButton {
     display: none;

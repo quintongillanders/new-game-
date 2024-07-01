@@ -5,13 +5,16 @@ var ctx = canvas.getContext('2d');
 document.getElementById("gameCanvas").style.display = 'none';
 document.getElementById("timer").style.display = 'none';
 document.getElementById("playerscore").style.display = 'none';
+document.getElementById("optionsmenu").style.display = 'none';
+var level1Complete = document.getElementById('level1Complete'); // level 1 complete message
 var timer; // timer variable
-var timeLeft = 60; // default time
+var timeLeft = 50; // default time
 var lives; // lives variable
 var lives = 3; // number of lives remaining 
 var worms = []; // array for worm 
+var score = 0;
 var maxWorms = 20;
-var wormsPerSpawn = 5;
+var wormsPerSpawn = 1;
 var growthRate = 0.1; // increases the speed of the growth rate of the worm, shrinking and growing in size
 var radius;
 var minRadius = 2;
@@ -19,36 +22,118 @@ var maxRadius = 25;
 var position;
 var caught;
 var gradient;
+var wormSpawnInterval;
+var character;
+var position;
+const awaitLoadCount = 3;
+let loadcount = 0;
+let musicOn = true;
+let SoundEffectsOn = true;
+let characterFlashInterval;
 
-$(document).ready(function() {
-    let musicOn = true;
-    let soundEffectsOn = true;
-})
+function saveSettings() {
+    const musicOption = document.querySelector('input[name="music"]:checked').value;
+    const SoundEffectsOption = document.querySelector('input[name="music"]:checked').value;
+
+    musicOn = (musicOption === 'on');
+    SoundEffectsOption = (SoundEffectsOption === 'on');
+
+}
+
+function playMusic() {
+    if (musicEnabled) {
+        document.getElementById('poisonforest').play();
+    } else {
+        document.getElementById('poisonforest').pause();
+    }
+}
+
+function playSoundEffect() {
+    if (soundEffectsEnabled) {
+        document.getElementById.apply('wormcaught').play();
+    }
+}
+
+document.getElementById('saveSettings').addEventListener('click', function(event) {
+    event.preventDefault();
+    saveSettings();
+});
+
+function updateScore() {
+    $('#score').html(score);
+}
 
 // this will display the "time up" message when the time runs out
-function updateTimer() {
+function updatelevel1Timer() {
     timeLeft = timeLeft - 1;
     if (timeLeft >= 0)
         $('#timer').html(timeLeft);
     else {
-        gameOver();
+        level1Passed();
     }
 }
 
 function updateLives() {
-    $('#lives').html('Lives: ' + lives);
+    $('#lives').html(lives);
+}
+
+function handleCollision() {
+    if (!character || !character.position) {
+        return;
+    }
+    for (let i = 0; i < worms.length; i++) {
+        const worm = worms[i];
+        const distance = Math.sqrt((character.position[0] - worm.x) ** 2 + (character.position[1] - worm.y) ** 2);
+        if (distance <= worm.radius) {
+            playerHit();
+            worms.splice(i, 1); // removes the worm from the canvas after contact with the player
+            i --;
+        }
+    }
 }
 
 function playerHit() {
+    var audio = document.getElementById("damage");
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play();
+    audio.volume = 0.2;
+
     lives -= 1;
     updateLives();
+    
     if (lives <= 0) {
         gameOver();
     }
 }
 
+function flashCharacter() {
+    
+}
+
+function killWorm() {
+    var audio = document.getElementById("wormcaught");
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play();
+    audio
+    score++;
+    audio.volume = 0.2;
+    updateScore();
+}
+
+
 
 function startGame() {
+    var audio = document.getElementById('poisonforest');
+    audio.volume = 0.2; // music volume
+    audio.currentTime = 0;
+    if (audio.paused) {
+        audio.play();
+        audio
+
+    }
+    
     // show the level 1 message
     document.getElementById("level1Text").style.display = 'block';
     // hide the level text after 3 seconds and then start the level
@@ -56,51 +141,65 @@ function startGame() {
         document.getElementById("level1Text").style.display = 'none';
     }, 3000); // 3 seconds
 
-    timer = setInterval(updateTimer, 1000);
+    timer = setInterval(updatelevel1Timer, 1000);
     document.getElementById("mainmenu").style.display = 'none';
     document.getElementById("gameCanvas").style.display = 'block';
     document.getElementById("timer").style.display = 'block';
     document.getElementById("playerscore").style.display = 'block';
-    level1();
-    updateTimer();
+    worms = [];
+    forest();
+    updatelevel1Timer();
+    createWorms();
 
-
+    wormSpawnInterval = setInterval(function () {
+        for (let i = 0; i < wormsPerSpawn; i++) {
+            if (worms.length >= maxWorms) {
+                return;
+            }
+            createWorms();
+        }
+    }, 1000)
 }
+
 
 document.getElementById('startGame').addEventListener("click", startGame);
 
 function options() {
-
+document.getElementById("optionsmenu").style.display = 'block';
+document.getElementById("mainmenu").style.display = 'none';
 }
 
-document.getElementById('options').addEventListener("click", options);
+document.getElementById('options').addEventListener('click', function(event) {
+    event.preventDefault();
+    options();
+});
 
-function timeUp() {
-    var gameOver = document.getElementById('gameOver');
-    gameMusic.pause();
 
+function level1Passed() {
+    var gameOver = document.getElementById('level1Complete');
+    var poisonforest = document.getElementById('poisonforest');
+    poisonforest.pause();
     gameOver.currentTime = 0;
-    //play sound
-    gameOver.play();
+    levelpassed.play();
 
     clearInterval(timer); // stop the timer
     clearInterval(wormSpawnInterval);
     character = null; // despawn the character when the time runs out
 
-    // show the time up message once the timer has ended. 
-    continueButton.style.display = 'block';
+    // show the completion message
+    gameOver.style.display = 'block';
     document.getElementById("gameCanvas").style.display = 'none';
     updateScore();
+
     setTimeout(function () {
         location.reload();
-    }, 3000);
-
+    }, 6000);
 }
 
 
 
 // spawns in the character, map, and worms
-function level1() {
+function forest() {
     // Character Sprite sheet image from https://opengameart.org/content/base-character-spritesheet-16x16
     const characterSpriteSheet = new Image();
     characterSpriteSheet.src = "./assets/main_character.png";
@@ -182,8 +281,8 @@ function level1() {
 
         
         gradient = ctx.createRadialGradient(0, 0, 1, 0, 0, maxRadius);
-        gradient.addColorStop(1, "orange");
-        gradient.addColorStop(1, "#f5e6ce");
+        gradient.addColorStop(1, "lightgreen");
+        gradient.addColorStop(1, "green");
         worms = [];
 
         document.addEventListener("keydown", doKeyDown);
@@ -198,6 +297,7 @@ function level1() {
         lastTimeStamp = timeStamp;
 
         update(tick);
+        handleCollision();
         draw();
 
         window.requestAnimationFrame(run);
@@ -417,7 +517,7 @@ function level1() {
                                 const distance = Math.sqrt((this.position[0] - worm.x) ** 2 + (this.position[1] - worm.y) ** 2);
                                 if (distance <= 30) {
                                     worms.splice(i, 1);
-                                    wormCaught();
+                                    killWorm();
                                     caught = true;
                                     break;
 
@@ -516,8 +616,8 @@ class SemiCircle extends GameObject {
                 this.isGrowing = false;
                 //update gradient colours
                 this.gradient = ctx.createRadialGradient(0, 0, 1, 0, 0, this.maxRadius);
-                this.gradient.addColorStop(1, "#f5e6ce");
-                this.gradient.addColorStop(0, "beige");
+                this.gradient.addColorStop(1, "lightgreen");
+                this.gradient.addColorStop(0, "green");
             }
         }
         // If shrinking after growing
@@ -532,8 +632,8 @@ class SemiCircle extends GameObject {
                 // if min size, change lifecycle phase to growing mode and respawn the worm at a random point on the canvas to start growing again
                 this.isGrowing = true;
                 this.gradient = ctx.createRadialGradient(0, 0, 1, 0, 0, this.maxRadius);
-                this.gradient.addColorStop(1, "beige");
-                this.gradient.addColorStop(0, "#f5e6ce");
+                this.gradient.addColorStop(1, "lightgreen");
+                this.gradient.addColorStop(0, "green");
             }
         }
 
@@ -579,18 +679,18 @@ function createWorms() {
     let vx = (Math.random() - 0.5) * 0.2; 
     let vy = (Math.random() - 0.5) * 0.2;
 
-    const initialColor= [244, 164, 96]; // Light sand colour
-    const finalColor = [245, 245, 220]; // Beige colour
+    
 
     let worm = new SemiCircle(ctx, x, y, vx, vy, minRadius, growthRate);
 
 
     worm.gradient = ctx.createRadialGradient(0, 0, 1, 0, 0, this.maxRadius);
-                worm.gradient.addColorStop(1, "#f5e6ce");
-                worm.gradient.addColorStop(0, "orange");
+                worm.gradient.addColorStop(1, "lightgreen");
+                worm.gradient.addColorStop(0, "green");
 
 
     worms.push(worm);
 }
+
 
 
